@@ -1,3 +1,42 @@
+<?php
+include 'koneksi.php';
+session_start();
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+
+    // Query untuk mendapatkan user berdasarkan email
+    $sql = "SELECT * FROM tb_logreg WHERE email = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $nama = $result->fetch_assoc();
+        
+        // Debugging - Cetak hash password dari database dan password input
+        echo "Password dari database (hash): " . $nama['password'] . "<br>";
+        echo "Password input oleh pengguna: " . $password . "<br>";
+        echo "Hasil password_verify(): " . (password_verify($password, $nama['password']) ? 'true' : 'false') . "<br>";
+    
+        if (password_verify($password, $nama['password'])) {
+            // Password benar, login berhasil
+            $_SESSION['username'] = $nama['username']; 
+            header("Location: user-home.php");
+            exit();
+        } else {
+            echo "Password salah!";
+        }
+    } else {
+        echo "Pengguna tidak ditemukan!";
+    }
+
+    $stmt->close();
+    $conn->close();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -26,13 +65,13 @@
                 <div class="signin-content">
                     <div class="signin-image">
                         <a href="/contact.html">
-                            <figure><img src="images/Screenshot 2024-08-08 081104.png" alt="sing up image"></figure>
+                            <figure><img src="images/login.jpg" alt="sing up image"></figure>
                             <figure><img src="images/Screenshot 2024-08-08 202546.png" alt="sing up image"></figure>
                         </a>
-                        <a href="register.html" class="signup-image-link">Create an account</a>
+                        <a href="register.php" class="signup-image-link">Create an account</a>
                     </div>
 
-                    <div class="signin-form">
+                    <div class="signin-form"> <form action="proses_login.php" method="post">
                         <h2 class="form-title">Sign in</h2>
                         <form method="POST" class="register-form" id="login-form">
                             <div class="form-group">
